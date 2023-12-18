@@ -1,164 +1,45 @@
 package com.employeemanagement.service;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
-import java.util.UUID;
+import org.springframework.web.multipart.MultipartFile;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.employeemanagement.configuration.UserDetailServicesImpl;
-import com.employeemanagement.dao.EmployeeRepository;
+import com.employeemanagement.Request.EmployeeDto;
+import com.employeemanagement.Request.JwtAuthenticationRequest;
+import com.employeemanagement.Request.UpdateEmployeeRequest;
+import com.employeemanagement.Response.JwtAuthenticationResponse;
+import com.employeemanagement.Response.Response;
 import com.employeemanagement.entity.Employee;
-import com.employeemanagement.model.JwtAuthenticationRequest;
-import com.employeemanagement.model.JwtAuthenticationResponse;
+import com.employeemanagement.exceptionhandler.UserException;
 
-@Transactional
-@Service
-public class EmployeeService {
+public interface EmployeeService {
 
-	@Autowired
-	EmployeeRepository employeeRepository;
+	public Response createEmployee(EmployeeDto req) throws UserException, IOException;
 
-	@Autowired
-	BCryptPasswordEncoder passwordEncoder;
+	public Employee getEmployeeById(int id) throws UserException;
 
-	@Autowired
-	UserDetailServicesImpl userDetailsService;
+	public Employee findEmployeeByEmail(String email);
 
-	@Autowired
-	private JwtUtils jwtUtils;
+	public List<Employee> getAllEmployee();
 
-	@Autowired
-	private AuthenticationManager authenticationManager;
+	public String removeEmployee(int emp_id) throws UserException;
 
-	public Employee save(Employee employee) {
+	public Employee updateEmployeeRecords(int id, UpdateEmployeeRequest req) throws UserException;
 
-		return this.employeeRepository.save(employee);
+	public JwtAuthenticationResponse login(JwtAuthenticationRequest authenticationRequest) throws UserException;
 
-	}
+	public Response logout(int id) throws UserException;
 
-	// Checking employee is exists or not
-	public Employee checkEmployee(String email) {
-		return employeeRepository.getByEmployeeByEmail(email);
-	}
+	public void uploadDataUsingExcelSheet(InputStream is) throws IOException;
 
-	public Employee getEmployeeById(int id) {
-		Employee employee = null;
+	public boolean checkFormate(MultipartFile file);
 
-		employee = this.employeeRepository.findById(id).get();
-//		System.out.println(employee);
-		return employee;
-	}
+	public List<Employee> getSortedEmployee(int page, int size, String firstName, String direction);
 
-	// Create Employee
-	public JwtAuthenticationResponse createEmployee(Employee emp) {
-
-		emp.setPassword(passwordEncoder.encode(emp.getPassword()));
-		emp.setRole("EMPLOYEE");
-		emp.setEnabled(false);
-		emp.setIs_deleted(false);
-		emp.setActive(false);
-
-//		System.out.println(emp);
-
-		String random = UUID.randomUUID().toString().replaceAll("-", "");
-
-		emp.setVerificationCode(random);
-
-		Employee createdEmployee = employeeRepository.saveAndFlush(emp);
-
-		var user = this.userDetailsService.loadUserByUsername(emp.getEmail());
-
-		var jwtToken = this.jwtUtils.generateToken(user);
-
-		return new JwtAuthenticationResponse(jwtToken, createdEmployee);
-
-	}
-
-	public Employee getSingleEmployee(int id) {
-
-		Employee employee = this.employeeRepository.findById(id).orElseThrow();
-
-		return employee;
-	}
-
-	// Read Employee
-	public List<Employee> getAllEmployee() {
-
-		return this.employeeRepository.getAllEmployee();
-
-	}
-
-	// Delete Employee
-	public Employee removeEmployee(Employee employee) {
-
-		this.employeeRepository.delete(employee.getId());
-		return employee;
-
-	}
-
-	// Update Employee
-
-	public Employee updateEmployeeRecords(Employee newEmployee, Employee existingEmployee) {
-
-		existingEmployee.setFirstName(newEmployee.getFirstName());
-		existingEmployee.setLastName(newEmployee.getLastName());
-		existingEmployee.setEmail(newEmployee.getEmail());
-		existingEmployee.setPhone(newEmployee.getPhone());
-		existingEmployee.setGender(newEmployee.getGender());
-		existingEmployee.setMaritalStatus(newEmployee.getMaritalStatus());
-		existingEmployee.setPersonalEmail(newEmployee.getPersonalEmail());
-		existingEmployee.setAlterPhone(newEmployee.getAlterPhone());
-		existingEmployee.setDob(newEmployee.getDob());
-		existingEmployee.setPermanentAddr(newEmployee.getPermanentAddr());
-		existingEmployee.setCurrentAddr(newEmployee.getCurrentAddr());
-		existingEmployee.setJobTitle(newEmployee.getJobTitle());
-		existingEmployee.setType(newEmployee.getType());
-		existingEmployee.setJoiningDate(newEmployee.getJoiningDate());
-		existingEmployee.setWorkLocation(newEmployee.getWorkLocation());
-		existingEmployee.setExperience(newEmployee.getExperience());
-		existingEmployee.setQualification(newEmployee.getQualification());
-		existingEmployee.setStream(newEmployee.getStream());
-		existingEmployee.setCollege(newEmployee.getCollege());
-		existingEmployee.setUniversity(newEmployee.getUniversity());
-		existingEmployee.setProfileImg(newEmployee.getProfileImg());
-		existingEmployee.setAdhar(newEmployee.getAdhar());
-		existingEmployee.setResult(newEmployee.getResult());
-		existingEmployee.setDegree(newEmployee.getDegree());
-		Employee updatedEmployee = this.employeeRepository.save(existingEmployee);
-
-		return updatedEmployee;
-
-	}
-
-	public JwtAuthenticationResponse login(JwtAuthenticationRequest authenticationRequest, Employee emp) {
-
-		authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationRequest.getEmail(),
-				authenticationRequest.getPassword()));
-		String email = authenticationRequest.getEmail();
-		var employee = this.userDetailsService.loadUserByUsername(email);
-		var jwtToken = this.jwtUtils.generateToken(employee);
-		emp.setActive(true);
-		Employee savedEmployee = this.employeeRepository.save(emp);
-
-		return new JwtAuthenticationResponse(jwtToken, savedEmployee);
-	}
-
-	public void logout(int id) {
-
-		Employee emp = this.employeeRepository.findById(id).orElseThrow();
-		if (emp != null) {
-			SecurityContextHolder.clearContext();
-			System.out.println(SecurityContextHolder.getContext());
-			this.employeeRepository.changeActiveStatus(id);
-		}
-
-	}
+	public boolean imgUpdateOrDelete(String path, MultipartFile file, int id) throws UserException, IOException;
+	
+	public String changePassword(String password, String email);
 
 }

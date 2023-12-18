@@ -17,7 +17,7 @@ import jakarta.persistence.Id;
 public class MonthlyLeaveRecord {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 
 	@CreationTimestamp

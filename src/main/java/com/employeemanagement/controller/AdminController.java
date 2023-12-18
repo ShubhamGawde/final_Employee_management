@@ -1,371 +1,210 @@
 package com.employeemanagement.controller;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.nio.file.Paths;
 import java.security.Principal;
-import java.util.HashMap;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.employeemanagement.entity.Admin;
-import com.employeemanagement.entity.Attendence;
-import com.employeemanagement.entity.Employee;
-import com.employeemanagement.entity.LeaveApplication;
-import com.employeemanagement.model.JwtAuthenticationRequest;
-import com.employeemanagement.model.JwtAuthenticationResponse;
-import com.employeemanagement.model.Response;
-import com.employeemanagement.service.AdminService;
-import com.employeemanagement.service.AttendenceService;
-import com.employeemanagement.service.MonthlyLeaveRecordService;
-import com.employeemanagement.service.EmailService;
-import com.employeemanagement.service.EmployeeService;
-//import com.employeemanagement.utility.RequestURL;
-import com.employeemanagement.service.LeaveService;
+import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.mail.MessagingException;
+import com.employeemanagement.Request.AdminDto;
+import com.employeemanagement.Request.EmployeeDto;
+import com.employeemanagement.Request.UpdateEmployeeRequest;
+import com.employeemanagement.Response.Response;
+import com.employeemanagement.entity.Admin;
+import com.employeemanagement.entity.Employee;
+import com.employeemanagement.exceptionhandler.CustomeException;
+import com.employeemanagement.exceptionhandler.UserException;
+import com.employeemanagement.helper.FileUpload;
+import com.employeemanagement.service.AdminService;
+import com.employeemanagement.service.EmployeeService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
-@CrossOrigin("*")
+
 @RestController
+@RequestMapping("/api")
 public class AdminController {
 
 	@Autowired
 	private AdminService adminService;
 
 	@Autowired
-	private EmailService emailService;
-
-	@Autowired
 	private EmployeeService employeeService;
 
 	@Autowired
-	private AttendenceService attendenceService;
+	private FileUpload upload;
 
 	@Autowired
-	private LeaveService leaveService;
+	private ModelMapper modelMapper;
 
-	@Autowired
-	private MonthlyLeaveRecordService databaseService;
-
-	// Sign up Handler
-
-	@Validated
-	@PostMapping("/wd/signup_admin")
-	public ResponseEntity<Response> registerAdmin(@Valid @RequestBody Admin admin, HttpServletRequest request)
-			throws IOException, MessagingException {
-
-		Admin findByEmail = this.adminService.findByEmail(admin.getEmail());
-
-		if (findByEmail != null) {
-
-			return new ResponseEntity<>(new Response(false, "email already exists", 409, "", List.of("Conflict"), null),
-					HttpStatus.CONFLICT);
-
-		}
-
-//			admin.setAdminImage(file.getBytes());
-
-		JwtAuthenticationResponse createdAdminResponse = this.adminService.createAdmin(admin);
-		Admin createdAdmin = (Admin) createdAdminResponse.getUser();
-
-//		String siteURL = RequestURL.getSiteURL(request);
-
-//			emailService.sendVerification(createdAdminResponse.getUser, siteURL);
-
-		return new ResponseEntity<>(new Response(true, "Admin created successfully", 201,
-				createdAdminResponse.getJwtToken(), null, createdAdmin), HttpStatus.CREATED);
-	}
-
-	// Admin verification handler
-
-	@GetMapping("/wd/verify")
-	public String verified(@RequestParam("code") String code) throws UnsupportedEncodingException {
-
-		Admin admin = this.adminService.verify(code);
-
-		if (admin != null) {
-
-			this.emailService.sendVerifiedMailToAdmin(admin);
-
-			System.out.println("mail testing");
-
-		}
-
-		return "you verified the admin for login process";
-
-	}
-
-	// Login Handler
-
-	@PostMapping("/wd/signin_admin")
-	public ResponseEntity<Response> login(@RequestBody JwtAuthenticationRequest request) {
-		Admin admin = this.adminService.findByEmail(request.getEmail());
-
-		if (admin.isActive()) {
-
-			return new ResponseEntity<>(
-					new Response(false, "You are loggedin in another device logout first from this device", 401, "",
-							List.of("UNAUTHORIZED"), null),
-					HttpStatus.UNAUTHORIZED);
-
-		}
-
-		try {
-			JwtAuthenticationResponse loginResponse = this.adminService.login(request, admin);
-
-			return new ResponseEntity<>(new Response(true, "login successfully", 200, loginResponse.getJwtToken(), null,
-					loginResponse.getUser()), HttpStatus.OK);
-
-		} catch (DisabledException ex) {
-
-			System.out.println("User Disabled" + ex.getMessage());
-			return new ResponseEntity<>(
-					new Response(false, "you are not allowed", 400, null, List.of("INTERNAL_SERVER_ERROR"), null),
-					HttpStatus.INTERNAL_SERVER_ERROR);
-
-		} catch (BadCredentialsException ex) {
-
-			System.out.println("BadCredentials" + ex.getMessage());
-
-			return new ResponseEntity<>(
-					new Response(false, "invalid id or password", 400, null, List.of("BAD_REQUEST"), null),
-					HttpStatus.BAD_REQUEST);
-
-		}
-
-	}
+	@Value("${project.path}")
+	private String path;
 
 	// for showing profile
 
 	@GetMapping("/admin/profile")
-	public ResponseEntity<Response> getAdmin(Principal principal) {
+	public ResponseEntity<Response> getAdmin(Principal principal) throws UserException {
+		String email = principal.getName();
+		Admin admin = this.adminService.findByEmail(email);
 
-		try {
-			String email = principal.getName();
-
-			Admin admin = this.adminService.findByEmail(email);
-
-			return new ResponseEntity<>(new Response(true, "Admin found", 302, "", null, admin), HttpStatus.FOUND);
-
-		} catch (NoSuchElementException ex) {
-			ex.printStackTrace();
-			return new ResponseEntity<>(new Response(false, "User not found", 404, "", List.of("NOT_FOUND"), null),
-					HttpStatus.NOT_FOUND);
+		if (admin != null) {
+			return new ResponseEntity<>(new Response(true, "Admin found", admin), HttpStatus.FOUND);
 		}
-
+		throw new UserException(false,"Admin not found with email :" + email, 404);
 	}
 
 	@PutMapping("/admin/update_admin/{id}")
-	public ResponseEntity<Response> updateAdminRecord(@PathVariable("id") int id, @RequestBody Admin newAdminRecord) {
+	public ResponseEntity<Response> updateAdminRecord(@PathVariable("id") int id, @RequestBody AdminDto req)
+			throws UserException {
+		Admin updatedDetails = this.adminService.updateDetails(id, req);
 
-		Admin admin = this.adminService.getAdmin(id);
-
-		if (admin == null) {
-
-			return new ResponseEntity<>(new Response(false, "Invalid Employee", 404, null, List.of("NOT_FOUND"), null),
-					HttpStatus.NOT_FOUND);
-		}
-
-		try {
-			Admin updatedEmployee = this.adminService.updateDetails(newAdminRecord, admin);
-			return new ResponseEntity<>(new Response(true, " updated successfully", 200, null, null, updatedEmployee),
-					HttpStatus.OK);
-
-		} catch (Exception ex) {
-
-			return new ResponseEntity<>(
-					new Response(false, " email already exists", 409, null, List.of("CONFLICT"), newAdminRecord),
-					HttpStatus.OK);
-		}
-
+		return new ResponseEntity<>(new Response(true, "Updated successfully", updatedDetails), HttpStatus.OK);
 	}
 
 	// Employee Creation Handler
 
 	@Validated
 	@PostMapping("/admin/add_employee")
-	public ResponseEntity<Response> createEmployee(@Valid @RequestBody Employee employee, HttpServletRequest request) {
+	public ResponseEntity<Response> createEmployee(@Valid @RequestBody EmployeeDto req, HttpServletRequest request)
+			throws UserException, IOException {
+		Response createEmployee = this.employeeService.createEmployee(req);
 
-		Employee checkEmployee = this.employeeService.checkEmployee(employee.getEmail());
-
-		if (checkEmployee != null) {
-
-			return new ResponseEntity<>(new Response(false, "email already exists", 409, "", List.of("CONFLICT"), null),
-					HttpStatus.CONFLICT);
-
-		}
-
-		JwtAuthenticationResponse jwtAuthenticationResponse = this.employeeService.createEmployee(employee);
-
-		return new ResponseEntity<>(
-				new Response(true, " Created successfully", 201, "", null, jwtAuthenticationResponse.getUser()),
-				HttpStatus.CREATED);
-
+		return new ResponseEntity<>(createEmployee, HttpStatus.CREATED);
 	}
 
 	// Read single Employee handler
 
 	@GetMapping("/admin/read_employee/{id}")
-	public ResponseEntity<Response> displaySingleEmployeeRecord(@PathVariable("id") int id) {
+	public ResponseEntity<Response> displaySingleEmployeeRecord(@PathVariable("id") int id) throws UserException {
+		Employee employee = this.employeeService.getEmployeeById(id);
+		EmployeeDto mapedEmp = this.modelMapper.map(employee, EmployeeDto.class);
 
-		Employee singleEmployee = this.employeeService.getSingleEmployee(id);
-		if (singleEmployee == null) {
-
-			return new ResponseEntity<>(
-					new Response(false, " Employee not found", 404, null, List.of("NOT_FOUND"), null),
-					HttpStatus.NOT_FOUND);
-		}
-		return new ResponseEntity<>(new Response(true, " Found ", 200, null, null, singleEmployee), HttpStatus.OK);
-
+		return new ResponseEntity<>(new Response(true, "Employee details", mapedEmp), HttpStatus.OK);
 	}
 
 	// Read All Employee handler
 
 	@GetMapping("/admin/read_employees")
-	public ResponseEntity<List<Employee>> displayAllEmployeesOnAdminPanel() {
-
-		List<Employee> allEmployee = this.employeeService.getAllEmployee();
+	public ResponseEntity<List<EmployeeDto>> displayAllEmployeesOnAdminPanel() {
+		List<EmployeeDto> allEmployee = this.employeeService.getAllEmployee().stream()
+				.map(emp -> this.modelMapper.map(emp, EmployeeDto.class)).toList();
 
 		return ResponseEntity.ok(allEmployee);
-
 	}
 
 	// Delete Employee Handler
 
 	@DeleteMapping("/admin/delete_employee/{id}")
-	public ResponseEntity<Response> removeEmployeeRecord(@PathVariable("id") int id) {
+	public ResponseEntity<Map<String, Object>> removeEmployeeRecord(@PathVariable("id") int id) throws UserException {
+		String msg = this.employeeService.removeEmployee(id);
 
-		Employee employee = this.employeeService.getSingleEmployee(id);
-		if (employee == null) {
-
-			return new ResponseEntity<>(
-					new Response(false, "Employee not found", 404, null, List.of("NOT_FOUND"), null),
-					HttpStatus.NOT_FOUND);
-		}
-
-		Employee removedEmployee = this.employeeService.removeEmployee(employee);
-
-		return new ResponseEntity<>(new Response(true, " Deleted successfully", 200, null, null, removedEmployee),
-				HttpStatus.OK);
+		return ResponseEntity.ok(Map.of("Success", true, "message", msg));
 	}
 
 	// Update Employee Record Handler
 
 	@PutMapping("/admin/update_employee/{id}")
 	public ResponseEntity<Response> updateEmployeeRecord(@PathVariable("id") int id,
-			@RequestBody Employee newEmployeeRecord) {
+			@RequestBody UpdateEmployeeRequest req) throws UserException {
+		Employee updatedEmployee = this.employeeService.updateEmployeeRecords(id, req);
+		EmployeeDto mappedEmployee = this.modelMapper.map(updatedEmployee, EmployeeDto.class);
 
-		Employee getEmployeeById = this.employeeService.getEmployeeById(id);
+		return new ResponseEntity<>(new Response(true, "update successfully", mappedEmployee), HttpStatus.OK);
+	}
 
-		if (getEmployeeById == null) {
+	@PostMapping("admin/upload/excel")
+	public ResponseEntity<Map<String, Object>> uploadExcelData(@RequestParam("file") MultipartFile file)
+			throws IOException {
+		boolean checkFormate = this.employeeService.checkFormate(file);
 
-			return new ResponseEntity<>(new Response(false, "Invalid Employee", 404, null, List.of("NOT_FOUND"), null),
-					HttpStatus.NOT_FOUND);
-		}
-
-		try {
-			Employee updatedEmployee = this.employeeService.updateEmployeeRecords(newEmployeeRecord, getEmployeeById);
-			return new ResponseEntity<>(new Response(true, " updated successfully", 200, null, null, updatedEmployee),
-					HttpStatus.OK);
-
-		} catch (Exception ex) {
-
+		if (!checkFormate) {
 			return new ResponseEntity<>(
-					new Response(false, " email already exists", 409, null, List.of("CONFLICT"), newEmployeeRecord),
-					HttpStatus.OK);
+					Map.of("success", false, "message", "file formate is incorrect ", "TimeStamp", LocalDateTime.now()),
+					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+		this.employeeService.uploadDataUsingExcelSheet(file.getInputStream());
 
-	}
+		return new ResponseEntity<>(Map.of("success", true, "message", "Record inserted "), HttpStatus.CREATED);
 
-	// for showing all the present employees
-
-	@GetMapping("/admin/present_employee")
-	public ResponseEntity<List<Attendence>> numberOfPresentEmployee() {
-
-		List<Attendence> allPresentEmployee = this.attendenceService.getAllPresentEmployee();
-
-		return ResponseEntity.ok(allPresentEmployee);
-
-	}
-
-//	show leave application of employees
-
-	@GetMapping("/admin/applications")
-	public ResponseEntity<Map<String, Object>> showAllApplications() {
-
-		Map<String, Object> showAllApplication = this.leaveService.showAllApplication();
-
-		return new ResponseEntity<>(showAllApplication, HttpStatus.OK);
-
-	}
-
-	// Handler for handling hr response
-
-	@PostMapping("/admin/leave_response")
-	public ResponseEntity<Map<String, Object>> leaveApplicationReponse(@RequestBody LeaveApplication leaveApplication) {
-
-		Map<String, Object> reponse = this.leaveService.setStatus(leaveApplication);
-
-		return new ResponseEntity<>(reponse, HttpStatus.OK);
-
-	}
-
-	@GetMapping("/admin/generate_report")
-	public ResponseEntity<Map<String, Object>> insert() {
-
-		Map<String, Object> response = new HashMap<>();
-		try {
-			this.databaseService.executeSQLQueries();
-			response.put("success", true);
-			response.put("code", 200);
-			response.put("message", "record inserted sucessfully");
-			return new ResponseEntity<>(response, HttpStatus.OK);
-
-		} catch (Exception ex) {
-			response.put("success", false);
-			response.put("code", 500);
-			response.put("message", "record not inserted ");
-			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-		}
 	}
 
 	@PutMapping("/admin/logout/{id}")
-	public ResponseEntity<Map<String, Object>> logout(@PathVariable("id") int id) {
-
-		this.adminService.logout(id);
-		Map<String, Object> response = new HashMap<>();
-		response.put("success", true);
-		response.put("code", 200);
-		response.put("message", "logout successfully");
+	public ResponseEntity<Response> logout(@PathVariable("id") int id) throws UserException {
+		Response response = this.adminService.logout(id);
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
-
 	}
 
-	@GetMapping("/wd/demo")
+	@GetMapping("/admin/get_sorted/employee")
+	public ResponseEntity<List<EmployeeDto>> getSortedDate(@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "firstName") String firstName,
+			@RequestParam(defaultValue = "asc") String direction) {
+		List<EmployeeDto> sortedEmployee = this.employeeService.getSortedEmployee(page, size, firstName, direction)
+				.stream().map(emp -> modelMapper.map(emp, EmployeeDto.class)).toList();
+
+		return ResponseEntity.ok(sortedEmployee);
+	}
+
+	@GetMapping("/admin/demo")
 	public String demo() {
 
-		this.databaseService.executeSQLQueries();
-		return "success";
+		return "message : ok...";
+	}
 
+	@PostMapping("/image/upload")
+	public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) {
+
+		try {
+			String uploadImage = this.upload.uploadImage(file);
+			return ResponseEntity.ok(uploadImage);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return ResponseEntity.internalServerError().body(null);
+		}
+	}
+
+	@GetMapping("/image")
+	public ResponseEntity<Resource> getImage(@RequestParam("img") String img) throws MalformedURLException {
+		String imagePath = path + File.separator + img;
+		Resource resource = new UrlResource(Paths.get(imagePath).toUri());
+
+		if (resource.exists() && resource.isReadable()) {
+			return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(resource);
+		} else {
+			return ResponseEntity.notFound().build();
+		}
+	}
+
+	@PostMapping("/admin/change/password/{id}")
+	public ResponseEntity<Response> changePassword(@PathVariable("id") int id, @RequestParam String oldPassword,
+			@RequestParam String newPassword) throws UserException, CustomeException {
+		Response response = this.adminService.changePassword(id, oldPassword, newPassword);
+
+		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 
 }

@@ -2,21 +2,20 @@ package com.employeemanagement;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
 @SpringBootApplication
-public class EmployeeManagementSystemApplication {
+public class EmployeeManagementSystemApplication extends SpringBootServletInitializer {
 
 	public static void main(String[] args) {
 		SpringApplication.run(EmployeeManagementSystemApplication.class, args);
+
 	}
-//
-//	@PostConstruct
-//	public void init() {
-//		// Setting Spring Boot SetTimeZone
-//		TimeZone.setDefault(TimeZone.getTimeZone("IST"));
-//		System.out.println("hello");
-//
-//		System.out.println(TimeZone.getDefault());
-//		System.out.println("hello");
-//	}
+
+	@Override
+	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+		return builder.sources(EmployeeManagementSystemApplication.class);
+	}
+
 }

@@ -6,8 +6,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.employeemanagement.dao.AdminRepository;
-import com.employeemanagement.dao.EmployeeRepository;
+import com.employeemanagement.Repository.AdminRepository;
+import com.employeemanagement.Repository.EmployeeRepo;
 import com.employeemanagement.entity.Admin;
 import com.employeemanagement.entity.Employee;
 
@@ -23,25 +23,27 @@ public class UserDetailServicesImpl implements UserDetailsService {
 	private AdminRepository adminRepository;
 
 	@Autowired
-	private EmployeeRepository employeeRepository;
+	private EmployeeRepo employeeRepository;
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-		Admin admin = this.adminRepository.getAdminByName(username);
-		Employee employee = this.employeeRepository.getByEmployeeByEmail(username);
+		Employee employee = this.employeeRepository.findByEmail(username);
 
-		if (admin != null) {
-			return new UserDetailsImpl(admin);
-
-		} else if (employee != null) {
-
+		if (employee != null)
+		{
 			return new UserDetailsImpl(employee);
-
-		} else {
-
-			throw new UsernameNotFoundException("Could not found user");
 		}
+		
+		Admin admin = this.adminRepository.getAdminByName(username);
+		
+		if (admin != null) 
+		{
+			return new UserDetailsImpl(admin);
+		}
+		
+		throw new UsernameNotFoundException("Invalid Username: " + username);
+		
 
 	}
 

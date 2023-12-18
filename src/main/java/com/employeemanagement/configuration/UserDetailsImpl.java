@@ -87,23 +87,9 @@ public class UserDetailsImpl implements UserDetails {
 
 	@Override
 	public boolean isEnabled() {
-//		if (admin != null && admin.isEnable()) {
-//
-//			return true;
-//		} else {
-//			return false;
-//
-//		}
 		return true;
 
 	}
 
-	public int getAdminId() {
-		return admin.getId();
-	}
-
-	public int getEmployeeId() {
-		return employee.getId();
-	}
 
 }
