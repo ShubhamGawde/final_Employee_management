@@ -11,7 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -241,7 +240,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 		Employee employee = this.employeeRepository.findByEmail(email);
 		if (employee == null) {
-			throw new UserException(false, "invalid email", 404);
+			throw new UserException(false, "Email does not exist", 404);
 
 		}
 
@@ -255,7 +254,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 		var emp = this.userDetailsService.loadUserByUsername(email);
 		var jwtToken = this.jwtUtils.generateToken(emp, employee.getId(), employee.getRole());
-		employee.setActive(true);
+		employee.setActive(false);
 		Employee savedEmployee = this.employeeRepository.save(employee);
 
 		EmployeeDto dto = this.modelMapper.map(savedEmployee, EmployeeDto.class);

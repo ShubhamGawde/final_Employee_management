@@ -29,24 +29,34 @@ public class AttendenceServiceImpl implements AttendenceService {
 	private EmployeeServiceImpl employeeService;
 
 	@Override
-	public Attendence addAttendence(int id) throws UserException, CustomeException {
+	public boolean isCheckIn(int empId) throws UserException {
 
-		Employee employee = this.employeeService.getEmployeeById(id);
+		Employee employee = this.employeeService.getEmployeeById(empId);
 
 		Attendence attendence = this.attendenceRepo.findByDateAndId(LocalDate.now(), employee.getId());
 
-		if (attendence == null) {
-			Attendence createAttendence = new Attendence();
-			createAttendence.setIn_time(LocalTime.now());
-			createAttendence.setDate(LocalDate.now());
-			createAttendence.setHalf_day(0);
-			createAttendence.setWorking_time(0);
-			createAttendence.setEmployee(employee);
-			Attendence savedAttendence = this.attendenceRepo.save(createAttendence);
-			return savedAttendence;
+		return attendence == null || !attendence.isCheckin() ? false : true;
+	}
 
+	@Override
+	public Attendence setChecking(int id) throws UserException, CustomeException {
+
+		Employee employee = this.employeeService.getEmployeeById(id);
+		Attendence attendence = this.attendenceRepo.findByDateAndId(LocalDate.now(), employee.getId());
+		if(attendence != null)
+		{
+			throw new CustomeException(false, "You are already checkedin. CheckIN  on next day !!!!", 400);
 		}
-		throw new CustomeException(false, "you already have checked in", 400);
+		Attendence createAttendence = new Attendence();
+		createAttendence.setIn_time(LocalTime.now());
+		createAttendence.setDate(LocalDate.now());
+		createAttendence.setHalf_day(0);
+		createAttendence.setWorking_time(0);
+		createAttendence.setEmployee(employee);
+		createAttendence.setCheckin(true);
+		createAttendence.setCheckout(false);
+		Attendence savedAttendence = this.attendenceRepo.save(createAttendence);
+		return savedAttendence;
 
 	}
 
@@ -61,7 +71,7 @@ public class AttendenceServiceImpl implements AttendenceService {
 
 			throw new CustomeException(false, " checked in first", 400);
 
-		} else if (attendence != null && attendence.getOut_time() != null) {
+		} else if (attendence != null && attendence.isCheckout()) {
 
 			throw new CustomeException(false, "You already have checked out", 400);
 
@@ -73,6 +83,8 @@ public class AttendenceServiceImpl implements AttendenceService {
 
 			attendence.setOut_time(LocalTime.now());
 			attendence.setWorking_time(totalTime);
+			attendence.setCheckout(true);
+			attendence.setCheckin(false);
 
 			if (totalTime < 300)
 				attendence.setHalf_day(1);

@@ -2,6 +2,7 @@ package com.employeemanagement.controller;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,15 +29,23 @@ public class AttendenceController {
 	@Autowired
 	AttendenceServiceImpl attendenceService;
 
-	@PostMapping("/wd/check_in/{id}")
+	@GetMapping("/employee/ischeck_in/{id}")
+	public ResponseEntity<Map<String, Object>> isCheckedIn(@PathVariable("id") int id) throws UserException {
+		Boolean checkIn = this.attendenceService.isCheckIn(id);
+
+		return ResponseEntity.ok(Map.of("Success", true, "Status",200, "CheckedIN", checkIn));
+
+	}
+
+	@PostMapping("/employee/check_in/{id}")
 	public ResponseEntity<Response> checkIn(@PathVariable("id") int id) throws UserException, CustomeException {
-		Attendence addAttendence = this.attendenceService.addAttendence(id);
+		Attendence addAttendence = this.attendenceService.setChecking(id);
 
 		return new ResponseEntity<>(new Response(true, "Attendence and checkin successfully", addAttendence),
 				HttpStatus.OK);
 	}
 
-	@PostMapping("/wd/check_out/{id}")
+	@PostMapping("/employee/check_out/{id}")
 	public ResponseEntity<Response> checkOut(@PathVariable("id") int id) throws UserException, CustomeException {
 		Attendence setCheckOutResponse = this.attendenceService.setCheckOut(id);
 

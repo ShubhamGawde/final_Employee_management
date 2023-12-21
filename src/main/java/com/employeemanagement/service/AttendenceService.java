@@ -11,9 +11,11 @@ public interface AttendenceService {
 
 	public List<Attendence> getAllPresentEmployee();
 
-	public Attendence addAttendence(int id) throws UserException, CustomeException;
+	public Attendence setChecking(int id) throws UserException, CustomeException;
 
 	public Attendence setCheckOut(int empId) throws UserException, CustomeException;
+	
+	public boolean isCheckIn(int empId) throws UserException;
 
 	public List<Attendence> getAllAttendenceOfEmployee(int emp_id) throws UserException;
 	

@@ -47,7 +47,7 @@ public class Attendence {
 	@ManyToOne
 	@JoinColumn(name = "emp_id")
 	private Employee employee;
-	
+
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	private LocalDate date;
 
@@ -59,6 +59,16 @@ public class Attendence {
 
 	@Column(columnDefinition = "INTEGER DEFAULT 0")
 	private Integer half_day;
+
+	private boolean isCheckin;
+
+	private boolean isCheckout;
+
+	private LocalTime takeBreak;
+
+	private LocalTime endBreak;
+	
+	private boolean isOnBreak;
 
 	private long working_time;
 

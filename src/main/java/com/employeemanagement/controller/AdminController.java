@@ -77,7 +77,7 @@ public class AdminController {
 		throw new UserException(false,"Admin not found with email :" + email, 404);
 	}
 
-	@PutMapping("/admin/update_admin/{id}")
+	@PostMapping("/admin/update_admin/{id}")
 	public ResponseEntity<Response> updateAdminRecord(@PathVariable("id") int id, @RequestBody AdminDto req)
 			throws UserException {
 		Admin updatedDetails = this.adminService.updateDetails(id, req);
@@ -127,7 +127,7 @@ public class AdminController {
 
 	// Update Employee Record Handler
 
-	@PutMapping("/admin/update_employee/{id}")
+	@PostMapping("/admin/update_employee/{id}")
 	public ResponseEntity<Response> updateEmployeeRecord(@PathVariable("id") int id,
 			@RequestBody UpdateEmployeeRequest req) throws UserException {
 		Employee updatedEmployee = this.employeeService.updateEmployeeRecords(id, req);

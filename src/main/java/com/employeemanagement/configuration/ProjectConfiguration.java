@@ -70,8 +70,10 @@ public class ProjectConfiguration {
         corsConfig.addAllowedMethod("GET");
         corsConfig.addAllowedMethod("PATCH");
         corsConfig.addAllowedMethod("POST");
+        corsConfig.addAllowedMethod("PUT");
+        corsConfig.addAllowedMethod("DELETE");
         corsConfig.addAllowedMethod("OPTIONS");
-        corsConfig.setAllowedOrigins(List.of("http://127.0.0.1:5500"));
+        corsConfig.setAllowedOrigins(List.of("http://127.0.0.1:5500","http://localhost:3000"));
         corsConfig.setAllowedHeaders(List.of("*"));
         corsConfig.setExposedHeaders(List.of("*"));
         UrlBasedCorsConfigurationSource source =
@@ -97,7 +99,6 @@ public class ProjectConfiguration {
 
 	}
 	
-	//"http://127.0.0.1:5500"
 
 }
 

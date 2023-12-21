@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -132,7 +131,7 @@ public class AdminServiceImpl implements AdminService {
 
 		}
 
-		admin.setActive(true);
+		admin.setActive(false);
 
 		Admin loggedinAdmin = this.adminRepo.save(admin);
 
