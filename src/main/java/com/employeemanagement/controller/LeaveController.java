@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,15 +30,15 @@ public class LeaveController {
 	private JwtUtils utils;
 	
 
-	@GetMapping("/employee/leaves/count/{emp_id}")
-	public ResponseEntity<Map<String, Object>> getCount(HttpServletRequest req, @PathVariable("emp_id") int emp_id) throws UserException {
-		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+	@GetMapping("/employee/leaves/count")
+	public ResponseEntity<Map<String, Object>> getCount(HttpServletRequest req) throws UserException {
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization"));
 		Integer totalLeaves = this.leaveService.getTotalLeavesCount(usrId);
 		return ResponseEntity.ok(Map.of("Message", "success", "data", totalLeaves));
 	}
 
-	@GetMapping("/employee/leaves/{emp_id}")
-	public ResponseEntity<List<Leave>> getSortedLeaves(HttpServletRequest req, @PathVariable("emp_id") int emp_id,
+	@GetMapping("/employee/leaves")
+	public ResponseEntity<List<Leave>> getSortedLeaves(HttpServletRequest req,
 			@RequestParam(defaultValue = "All") String category) throws UserException {
 		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
 

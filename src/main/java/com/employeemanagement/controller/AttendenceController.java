@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -35,18 +34,18 @@ public class AttendenceController {
 	@Autowired
 	private JwtUtils utils;
 
-	@GetMapping("/employee/ischeck_in/{id}")
-	public ResponseEntity<Map<String, Object>> isCheckedIn(HttpServletRequest req,@PathVariable("id") int id) throws UserException {
-		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+	@GetMapping("/employee/ischeck_in")
+	public ResponseEntity<Map<String, Object>> isCheckedIn(HttpServletRequest req) throws UserException {
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization"));
 		Boolean isCheckIn = this.attendenceService.isCheckIn(usrId);
 
 		return ResponseEntity.ok(Map.of("Success", true, "Status",200, "CheckedIN", isCheckIn));
 
 	}
 
-	@PostMapping("/employee/check_in/{id}")
-	public ResponseEntity<Response> checkIn(HttpServletRequest req,@PathVariable("id") int id) throws UserException, CustomeException {
-		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+	@PostMapping("/employee/check_in")
+	public ResponseEntity<Response> checkIn(HttpServletRequest req) throws UserException, CustomeException {
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization"));
 		Attendence addAttendence = this.attendenceService.setChecking(usrId);
 
 		return new ResponseEntity<>(new Response(true, "Attendence and checkin successfully", addAttendence),
@@ -54,8 +53,8 @@ public class AttendenceController {
 	}
 
 	@PostMapping("/employee/check_out/{id}")
-	public ResponseEntity<Response> checkOut(HttpServletRequest req,@PathVariable("id") int id) throws UserException, CustomeException {
-		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+	public ResponseEntity<Response> checkOut(HttpServletRequest req) throws UserException, CustomeException {
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization"));
 		Attendence setCheckOutResponse = this.attendenceService.setCheckOut(usrId);
 
 		return new ResponseEntity<>(new Response(true, " check out successfully", setCheckOutResponse), HttpStatus.OK);
@@ -68,9 +67,9 @@ public class AttendenceController {
 		return ResponseEntity.ok(allPresentEmployee);
 	}
 
-	@GetMapping("/employee/attendence/month/{emp_id}")
-	public ResponseEntity<List<Attendence>> getAllAttendence(HttpServletRequest req,@PathVariable("emp_id") int emp_id) throws UserException {
-		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+	@GetMapping("/employee/attendence/month")
+	public ResponseEntity<List<Attendence>> getAllAttendence(HttpServletRequest req) throws UserException {
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization"));
 		List<Attendence> allAttendenceOfEmployee = this.attendenceService.getAllAttendenceOfEmployee(usrId);
 
 		return ResponseEntity.ok(allAttendenceOfEmployee);

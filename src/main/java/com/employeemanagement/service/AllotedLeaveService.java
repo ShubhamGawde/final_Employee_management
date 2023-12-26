@@ -5,13 +5,12 @@ import java.util.Set;
 
 import com.employeemanagement.entity.AllotedLeave;
 import com.employeemanagement.entity.Employee;
-import com.employeemanagement.entity.LeaveType;
 import com.employeemanagement.exceptionhandler.CustomeException;
 import com.employeemanagement.exceptionhandler.UserException;
 
 public interface AllotedLeaveService {
 
-	public AllotedLeave alloteLeaveToEmployees(LeaveType leaveType, List<Integer> emp_id);
+	public AllotedLeave alloteLeaveToEmployees(Integer leave_id, List<Integer> emp_id);
 
 	public Set<AllotedLeave> getAllotedLeaves(int emp_id) throws UserException;
 

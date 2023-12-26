@@ -53,10 +53,10 @@ public class LeaveApplicationController {
 				HttpStatus.OK);
 	}
 
-	@GetMapping("/employee/leave_applications/{emp_id}")
-	public ResponseEntity<List<LeaveApplication>> showLeaveApplicationStatus(HttpServletRequest req,@PathVariable("emp_id") int emp_id)
+	@GetMapping("/employee/leave_applications")
+	public ResponseEntity<List<LeaveApplication>> showLeaveApplicationStatus(HttpServletRequest req)
 			throws UserException {
-		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization"));
 		List<LeaveApplication> applicationStatus = this.leaveApplicationService.getEmployeeApplicationByEmpId(usrId);
 
 		return new ResponseEntity<>(applicationStatus, HttpStatus.OK);

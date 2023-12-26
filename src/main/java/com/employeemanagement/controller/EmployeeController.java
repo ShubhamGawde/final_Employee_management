@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,18 +42,18 @@ public class EmployeeController {
 		return new ResponseEntity<>(new Response(true, "Employee found", employee), HttpStatus.OK);
 	}
 
-	@PutMapping("/employee/logout/{id}")
-	public ResponseEntity<Response> logout(HttpServletRequest req,@PathVariable("id") int id) throws UserException {
-		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+	@PutMapping("/employee/logout")
+	public ResponseEntity<Response> logout(HttpServletRequest req) throws UserException {
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization"));
 		Response response = this.employeeService.logout(usrId);
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@PostMapping("/image/delete/{id}")
-	public ResponseEntity<String> updateImg(HttpServletRequest req,@RequestParam("img") String img, @PathVariable("id") int empId,
+	@PostMapping("/image/delete")
+	public ResponseEntity<String> updateImg(HttpServletRequest req,@RequestParam("img") String img,
 			@RequestParam("file") MultipartFile file) throws IOException, UserException {
-		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization"));
 
 		boolean deleteImg = this.employeeService.imgUpdateOrDelete(img, file, usrId);
 

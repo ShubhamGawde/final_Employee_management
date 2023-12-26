@@ -33,18 +33,18 @@ public class AlloteLeaveController {
 	@Autowired
 	private JwtUtils utils;
 
-	@PostMapping("/admin/alloteLeave")
-	public ResponseEntity<Response> alloteLeave(@RequestBody AlloteLeaveRequest alloteLeaveRequest) {
+	@PostMapping("/admin/alloteLeave/{leave_id}")
+	public ResponseEntity<Response> alloteLeave(@PathVariable("leave_id")Integer leave_id, @RequestBody AlloteLeaveRequest alloteLeaveRequest) {
 		AllotedLeave alloteLeaveToEmployees = this.allotedLeaveService
-				.alloteLeaveToEmployees(alloteLeaveRequest.getLeaveType(), alloteLeaveRequest.getEmp_ids());
+				.alloteLeaveToEmployees(leave_id, alloteLeaveRequest.getEmp_ids());
 
 		return new ResponseEntity<>(new Response(true, "leave alloted to given employees", alloteLeaveToEmployees),
 				HttpStatus.OK);
 	}
 
-	@GetMapping("/employee/get_al/{emp_id}")
-	public ResponseEntity<Set<AllotedLeave>> getAllotedLeave(HttpServletRequest req,@PathVariable("emp_id") int emp_id) throws UserException {
-		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+	@GetMapping("/employee/get_al")
+	public ResponseEntity<Set<AllotedLeave>> getAllotedLeave(HttpServletRequest req) throws UserException {
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization"));
 		Set<AllotedLeave> allotedLeaves = this.allotedLeaveService.getAllotedLeaves(usrId);
 
 		return ResponseEntity.ok(allotedLeaves);

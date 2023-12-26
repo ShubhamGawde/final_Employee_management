@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.employeemanagement.Repository.AllotedLeaveRepo;
 import com.employeemanagement.Repository.EmployeeRepo;
+import com.employeemanagement.Repository.LeaveTypeRepo;
 import com.employeemanagement.entity.AllotedLeave;
 import com.employeemanagement.entity.Employee;
 import com.employeemanagement.entity.LeaveType;
@@ -29,12 +30,15 @@ public class AllotedLeaveServiceImpl implements AllotedLeaveService {
 
 	@Autowired
 	private AllotedLeaveRepo allotedLeaveRepo;
+	
+	@Autowired
+	private LeaveTypeRepo leaveTypeRepo;
 
 	@Override
-	public AllotedLeave alloteLeaveToEmployees(LeaveType leaveType, List<Integer> emp_ids) {
+	public AllotedLeave alloteLeaveToEmployees(Integer leave_id, List<Integer> emp_ids) {
 
 		List<Employee> allEmployees = this.employeeRepo.findAllById(emp_ids);
-
+		LeaveType leaveType = this.leaveTypeRepo.findById(leave_id).get();
 		AllotedLeave allotedLeave = null;
 
 		for (Employee emp : allEmployees) {

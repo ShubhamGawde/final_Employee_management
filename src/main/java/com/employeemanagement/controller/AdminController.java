@@ -156,13 +156,10 @@ public class AdminController {
 
 	}
 
-	@PutMapping("/admin/logout/{id}")
-	public ResponseEntity<Response> logout(HttpServletRequest req, @PathVariable("id") int id) throws UserException {
-		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+	@PutMapping("/admin/logout")
+	public ResponseEntity<Response> logout(HttpServletRequest req) throws UserException {
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization"));
 		
-		if(usrId != id) {
-			throw new UserException(false,"user not found with id : " + id, 404);
-		}
 		Response response = this.adminService.logout(usrId);
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
@@ -210,10 +207,10 @@ public class AdminController {
 		}
 	}
 
-	@PostMapping("/admin/change/password/{id}")
-	public ResponseEntity<Response> changePassword(HttpServletRequest req,@PathVariable("id") int id, @RequestParam String oldPassword,
+	@PostMapping("/admin/change/password")
+	public ResponseEntity<Response> changePassword(HttpServletRequest req, @RequestParam String oldPassword,
 			@RequestParam String newPassword) throws UserException, CustomeException {
-		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization"));
 		Response response = this.adminService.changePassword(usrId, oldPassword, newPassword);
 
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
