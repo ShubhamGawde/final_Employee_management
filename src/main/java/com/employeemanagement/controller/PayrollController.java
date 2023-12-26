@@ -34,7 +34,7 @@ public class PayrollController {
 
 		Payroll calculatePayRoll = this.payrollService.calculatePayRoll(emp_id, req);
 
-		return new ResponseEntity<>(new Response(true, " Payroll created", calculatePayRoll), HttpStatus.CREATED);
+		return new ResponseEntity<>(new Response(true, " Payroll created", calculatePayRoll), HttpStatus.OK);
 
 	}
 

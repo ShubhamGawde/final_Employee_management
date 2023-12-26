@@ -19,12 +19,18 @@ import com.employeemanagement.entity.LeaveApplication;
 import com.employeemanagement.entity.LeaveStatus;
 import com.employeemanagement.exceptionhandler.CustomeException;
 import com.employeemanagement.exceptionhandler.UserException;
+import com.employeemanagement.serviceImpl.JwtUtils;
 import com.employeemanagement.serviceImpl.LeaveApplicationServiceImpl;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @CrossOrigin("*")
 @RestController
 @RequestMapping("/api")
 public class LeaveApplicationController {
+	
+	@Autowired
+	private JwtUtils utils;
 
 	@Autowired
 	private LeaveApplicationServiceImpl leaveApplicationService;
@@ -44,13 +50,14 @@ public class LeaveApplicationController {
 				.creatingLeaveApplication(leaveApplication);
 
 		return new ResponseEntity<Response>(new Response(true, "leave application applied", creatingLeaveApplication),
-				HttpStatus.CREATED);
+				HttpStatus.OK);
 	}
 
 	@GetMapping("/employee/leave_applications/{emp_id}")
-	public ResponseEntity<List<LeaveApplication>> showLeaveApplicationStatus(@PathVariable("emp_id") int emp_id)
+	public ResponseEntity<List<LeaveApplication>> showLeaveApplicationStatus(HttpServletRequest req,@PathVariable("emp_id") int emp_id)
 			throws UserException {
-		List<LeaveApplication> applicationStatus = this.leaveApplicationService.getEmployeeApplicationByEmpId(emp_id);
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+		List<LeaveApplication> applicationStatus = this.leaveApplicationService.getEmployeeApplicationByEmpId(usrId);
 
 		return new ResponseEntity<>(applicationStatus, HttpStatus.OK);
 

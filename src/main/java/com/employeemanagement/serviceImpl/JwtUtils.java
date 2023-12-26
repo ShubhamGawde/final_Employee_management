@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class JwtUtils {
@@ -54,6 +55,13 @@ public class JwtUtils {
 	public Boolean validateToken(String token, UserDetails userDetails) {
 		final String username = extractUsername(token);
 		return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+	}
+
+	
+	//To Get Id from Token
+	public Integer getIdFromToken(String token) {
+		String newToken = token.substring(7);
+		return (Integer) extractAllClaims(newToken).get("id");
 	}
 
 }

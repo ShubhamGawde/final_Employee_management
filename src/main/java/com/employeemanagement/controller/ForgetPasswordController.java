@@ -48,7 +48,7 @@ public class ForgetPasswordController {
 			return ResponseEntity.ok("Otp send successfully");
 		} catch (UnsupportedEncodingException | MessagingException e) {
 			e.printStackTrace();
-			return ResponseEntity.internalServerError().body("Otp not send");
+			return ResponseEntity.ok().body("Otp not send");
 		}
 	}
 
@@ -68,14 +68,13 @@ public class ForgetPasswordController {
 		}
 
 		return new ResponseEntity<>(new ErrorResponse(false, 400, "Invalid OTP", req.getRequestURI(),
-				req.getMethod(), LocalDateTime.now()), HttpStatus.INTERNAL_SERVER_ERROR);
+				req.getMethod(), LocalDateTime.now()), HttpStatus.OK);
 	}
 
 	@PostMapping("/change/password")
 	public ResponseEntity<?> changePassword(@RequestParam("password") String password, HttpSession session) {
 		String email = (String) session.getAttribute("email");
 		String changePassword = employeeService.changePassword(password, email);
-
 		return ResponseEntity.ok(changePassword);
 	}
 

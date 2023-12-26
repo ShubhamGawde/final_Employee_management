@@ -35,7 +35,7 @@ public class NoticeController {
 
 		Notice createdNotice = this.noticeService.setNotice(req);
 
-		return new ResponseEntity<>(new Response(true, "Notice Created", createdNotice), HttpStatus.CREATED);
+		return new ResponseEntity<>(new Response(true, "Notice Created", createdNotice), HttpStatus.OK);
 
 	}
 

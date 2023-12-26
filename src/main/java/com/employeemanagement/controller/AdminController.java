@@ -40,10 +40,10 @@ import com.employeemanagement.exceptionhandler.UserException;
 import com.employeemanagement.helper.FileUpload;
 import com.employeemanagement.service.AdminService;
 import com.employeemanagement.service.EmployeeService;
+import com.employeemanagement.serviceImpl.JwtUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-
 
 @RestController
 @RequestMapping("/api")
@@ -64,6 +64,9 @@ public class AdminController {
 	@Value("${project.path}")
 	private String path;
 
+	@Autowired
+	private JwtUtils utils;
+
 	// for showing profile
 
 	@GetMapping("/admin/profile")
@@ -72,9 +75,9 @@ public class AdminController {
 		Admin admin = this.adminService.findByEmail(email);
 
 		if (admin != null) {
-			return new ResponseEntity<>(new Response(true, "Admin found", admin), HttpStatus.FOUND);
+			return new ResponseEntity<>(new Response(true, "Admin found", admin), HttpStatus.OK);
 		}
-		throw new UserException(false,"Admin not found with email :" + email, 404);
+		throw new UserException(false, "Admin not found with email :" + email, 404);
 	}
 
 	@PostMapping("/admin/update_admin/{id}")
@@ -93,7 +96,7 @@ public class AdminController {
 			throws UserException, IOException {
 		Response createEmployee = this.employeeService.createEmployee(req);
 
-		return new ResponseEntity<>(createEmployee, HttpStatus.CREATED);
+		return new ResponseEntity<>(createEmployee, HttpStatus.OK);
 	}
 
 	// Read single Employee handler
@@ -148,13 +151,19 @@ public class AdminController {
 		}
 		this.employeeService.uploadDataUsingExcelSheet(file.getInputStream());
 
-		return new ResponseEntity<>(Map.of("success", true, "message", "Record inserted "), HttpStatus.CREATED);
+		return new ResponseEntity<>(Map.of("success", true, "Status", 201, "message", "Record inserted "),
+				HttpStatus.OK);
 
 	}
 
 	@PutMapping("/admin/logout/{id}")
-	public ResponseEntity<Response> logout(@PathVariable("id") int id) throws UserException {
-		Response response = this.adminService.logout(id);
+	public ResponseEntity<Response> logout(HttpServletRequest req, @PathVariable("id") int id) throws UserException {
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+		
+		if(usrId != id) {
+			throw new UserException(false,"user not found with id : " + id, 404);
+		}
+		Response response = this.adminService.logout(usrId);
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -188,21 +197,24 @@ public class AdminController {
 	}
 
 	@GetMapping("/image")
-	public ResponseEntity<Resource> getImage(@RequestParam("img") String img) throws MalformedURLException {
+	public ResponseEntity<?> getImage(@RequestParam("img") String img) throws MalformedURLException {
 		String imagePath = path + File.separator + img;
 		Resource resource = new UrlResource(Paths.get(imagePath).toUri());
 
 		if (resource.exists() && resource.isReadable()) {
 			return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(resource);
 		} else {
-			return ResponseEntity.notFound().build();
+
+			return ResponseEntity.ok(Map.of("success", false, "Status", 404, "message", "Image not found"));
+
 		}
 	}
 
 	@PostMapping("/admin/change/password/{id}")
-	public ResponseEntity<Response> changePassword(@PathVariable("id") int id, @RequestParam String oldPassword,
+	public ResponseEntity<Response> changePassword(HttpServletRequest req,@PathVariable("id") int id, @RequestParam String oldPassword,
 			@RequestParam String newPassword) throws UserException, CustomeException {
-		Response response = this.adminService.changePassword(id, oldPassword, newPassword);
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+		Response response = this.adminService.changePassword(usrId, oldPassword, newPassword);
 
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}

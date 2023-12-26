@@ -43,23 +43,9 @@ public class AuthController {
 			throws IOException, MessagingException, UserException {
 		Response createdAdminResponse = this.adminService.createAdmin(req);
 
-		return new ResponseEntity<>(createdAdminResponse, HttpStatus.CREATED);
+		return new ResponseEntity<>(createdAdminResponse, HttpStatus.OK);
 	}
 
-//	@Validated
-//	@PostMapping("signup_employee")
-//	public ResponseEntity<JwtAuthenticationResponse> registerEmployee(@Valid @RequestBody CreateEmployeeRequest req,
-//			HttpServletRequest httpRequest) throws IOException, UserException {
-//
-//		JwtAuthenticationResponse createdEmployeeRes = this.employeeService.createEmployee(req);
-//
-////		String siteURL = RequestURL.getSiteURL(httpRequest);
-//
-////		emailService.sendVerification(createdEmp, siteURL);
-//
-//		return new ResponseEntity<>(createdEmployeeRes, HttpStatus.CREATED);
-//
-//	}
 
 	@PostMapping("signin_admin")
 	public ResponseEntity<JwtAuthenticationResponse> adminLogin(@RequestBody JwtAuthenticationRequest request)

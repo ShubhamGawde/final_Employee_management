@@ -20,7 +20,9 @@ import com.employeemanagement.Response.Response;
 import com.employeemanagement.entity.Employee;
 import com.employeemanagement.exceptionhandler.UserException;
 import com.employeemanagement.service.EmployeeService;
-//import com.employeemanagement.utility.RequestURL;
+import com.employeemanagement.serviceImpl.JwtUtils;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @CrossOrigin("*")
 @RestController
@@ -29,6 +31,9 @@ public class EmployeeController {
 
 	@Autowired
 	private EmployeeService employeeService;
+	
+	@Autowired
+	private JwtUtils utils;
 
 	@GetMapping("/employee/profile")
 	public ResponseEntity<Response> getEmployee(Principal principal) throws UserException {
@@ -39,16 +44,19 @@ public class EmployeeController {
 	}
 
 	@PutMapping("/employee/logout/{id}")
-	public ResponseEntity<Response> logout(@PathVariable("id") int id) throws UserException {
-		Response response = this.employeeService.logout(id);
+	public ResponseEntity<Response> logout(HttpServletRequest req,@PathVariable("id") int id) throws UserException {
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+		Response response = this.employeeService.logout(usrId);
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@PostMapping("/image/delete/{id}")
-	public ResponseEntity<String> updateImg(@RequestParam("img") String img, @PathVariable("id") int empId,
+	public ResponseEntity<String> updateImg(HttpServletRequest req,@RequestParam("img") String img, @PathVariable("id") int empId,
 			@RequestParam("file") MultipartFile file) throws IOException, UserException {
-		boolean deleteImg = this.employeeService.imgUpdateOrDelete(img, file, empId);
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+
+		boolean deleteImg = this.employeeService.imgUpdateOrDelete(img, file, usrId);
 
 		if (deleteImg) {
 			return ResponseEntity.ok("deleted Successfully");

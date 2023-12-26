@@ -18,6 +18,9 @@ import com.employeemanagement.Response.Response;
 import com.employeemanagement.entity.AllotedLeave;
 import com.employeemanagement.exceptionhandler.UserException;
 import com.employeemanagement.service.AllotedLeaveService;
+import com.employeemanagement.serviceImpl.JwtUtils;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @CrossOrigin("*")
@@ -26,6 +29,9 @@ public class AlloteLeaveController {
 
 	@Autowired
 	private AllotedLeaveService allotedLeaveService;
+	
+	@Autowired
+	private JwtUtils utils;
 
 	@PostMapping("/admin/alloteLeave")
 	public ResponseEntity<Response> alloteLeave(@RequestBody AlloteLeaveRequest alloteLeaveRequest) {
@@ -37,8 +43,9 @@ public class AlloteLeaveController {
 	}
 
 	@GetMapping("/employee/get_al/{emp_id}")
-	public ResponseEntity<Set<AllotedLeave>> getAllotedLeave(@PathVariable("emp_id") int emp_id) throws UserException {
-		Set<AllotedLeave> allotedLeaves = this.allotedLeaveService.getAllotedLeaves(emp_id);
+	public ResponseEntity<Set<AllotedLeave>> getAllotedLeave(HttpServletRequest req,@PathVariable("emp_id") int emp_id) throws UserException {
+		Integer usrId = utils.getIdFromToken(req.getHeader("Authorization").substring(7));
+		Set<AllotedLeave> allotedLeaves = this.allotedLeaveService.getAllotedLeaves(usrId);
 
 		return ResponseEntity.ok(allotedLeaves);
 	}

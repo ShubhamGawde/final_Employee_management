@@ -30,7 +30,7 @@ public class HolidayController {
 	{
 		Holidays newHoliday = this.holidayService.addNewHoliday(holiday);
 
-		return new ResponseEntity<>(new Response(true, "holiday created", newHoliday), HttpStatus.CREATED);
+		return new ResponseEntity<>(new Response(true, "holiday created", newHoliday), HttpStatus.OK);
 	}
 
 	@PostMapping("/admin/update_holiday/{h_id}")

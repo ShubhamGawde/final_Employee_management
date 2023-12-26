@@ -30,7 +30,7 @@ public class AttendeceRuleController {
 	public ResponseEntity<Response> addRule(@RequestBody AttendenceRules rule) {
 		AttendenceRules addRule = this.attendenceRuleService.addRule(rule);
 
-		return new ResponseEntity<>(new Response(true, "Rule created succesfully", addRule), HttpStatus.CREATED);
+		return new ResponseEntity<>(new Response(true, "Rule created succesfully", addRule), HttpStatus.OK);
 	}
 
 	@PostMapping("/admin/update_rule/{atr_id}")
