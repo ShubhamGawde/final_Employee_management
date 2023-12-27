@@ -1,7 +1,5 @@
 package com.employeemanagement.Request;
 
-import com.employeemanagement.entity.AllotedLeave;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,11 +15,9 @@ public class LeaveApplicationRequest {
 
 	private String end_date;
 
-	private int emp_id;
-
 	private int total_days;
 
-	private AllotedLeave allotedLeave;
+	private Integer allotedLeaveId;
 
 	private String reason;
 

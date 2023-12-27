@@ -43,11 +43,12 @@ public class LeaveApplicationController {
 		return new ResponseEntity<>(showAllApplication, HttpStatus.OK);
 	}
 
-	@PostMapping("/employee/create_application")
-	public ResponseEntity<Response> applyForLeave(@RequestBody LeaveApplicationRequest leaveApplication)
-			throws UserException {
+	@PostMapping("/employee/create_application/{altId}")
+	public ResponseEntity<Response> applyForLeave(@RequestBody LeaveApplicationRequest leaveApplication,@PathVariable("altId")Integer altId, HttpServletRequest req)
+			throws UserException, CustomeException {
+		Integer usrId = this.utils.getIdFromToken(req.getHeader("Authorization"));
 		LeaveApplication creatingLeaveApplication = this.leaveApplicationService
-				.creatingLeaveApplication(leaveApplication);
+				.creatingLeaveApplication(leaveApplication,altId,usrId);
 
 		return new ResponseEntity<Response>(new Response(true, "leave application applied", creatingLeaveApplication),
 				HttpStatus.OK);

@@ -11,11 +11,13 @@ import org.springframework.stereotype.Service;
 import com.employeemanagement.Repository.LeaveApplicationRepo;
 import com.employeemanagement.Request.LeaveApplicationRequest;
 import com.employeemanagement.Response.Response;
+import com.employeemanagement.entity.AllotedLeave;
 import com.employeemanagement.entity.Employee;
 import com.employeemanagement.entity.LeaveApplication;
 import com.employeemanagement.entity.LeaveStatus;
 import com.employeemanagement.exceptionhandler.CustomeException;
 import com.employeemanagement.exceptionhandler.UserException;
+import com.employeemanagement.service.AllotedLeaveService;
 import com.employeemanagement.service.EmployeeService;
 import com.employeemanagement.service.LeaveApplicationService;
 import com.employeemanagement.service.LeaveService;
@@ -33,24 +35,26 @@ public class LeaveApplicationServiceImpl implements LeaveApplicationService {
 
 	@Autowired
 	private LeaveService leaveService;
+	
+	@Autowired
+	private AllotedLeaveService allotedLeaveService;
 
 	@Override
-	public LeaveApplication creatingLeaveApplication(LeaveApplicationRequest applicationReq) throws UserException {
+	public LeaveApplication creatingLeaveApplication(LeaveApplicationRequest applicationReq,Integer altId, Integer usrId) throws UserException, CustomeException {
 
-		Employee employee = this.employeeService.getEmployeeById(applicationReq.getEmp_id());
-
+		Employee employee = this.employeeService.getEmployeeById(usrId);
+		AllotedLeave alloteleave = this.allotedLeaveService.getAlloteleaveById(altId);
 		LeaveApplication leaveApplication = new LeaveApplication();
-
 		leaveApplication.setStart_date(LocalDate.parse(applicationReq.getStart_date()));
 		leaveApplication.setEnd_date(LocalDate.parse(applicationReq.getEnd_date()));
 		leaveApplication.setReason(applicationReq.getReason());
 		leaveApplication.setTotal_days(applicationReq.getTotal_days());
 		leaveApplication.setEmployee(employee);
 		leaveApplication.setStatus(LeaveStatus.PENDING);
-		leaveApplication.setAllotedLeaveId(applicationReq.getAllotedLeave().getAltId());
-		leaveApplication.setType(applicationReq.getAllotedLeave().getType());
-		leaveApplication.setAllotedLeaveDays(applicationReq.getAllotedLeave().getDays());
-		leaveApplication.setCategory(applicationReq.getAllotedLeave().getCategory());
+		leaveApplication.setAllotedLeaveId(alloteleave.getAltId());
+		leaveApplication.setType(alloteleave.getType());
+		leaveApplication.setAllotedLeaveDays(alloteleave.getDays());
+		leaveApplication.setCategory(alloteleave.getCategory());
 
 		return this.applicationRepo.save(leaveApplication);
 

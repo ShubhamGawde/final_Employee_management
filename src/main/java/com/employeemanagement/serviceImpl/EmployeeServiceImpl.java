@@ -41,13 +41,13 @@ import com.employeemanagement.service.EmployeeService;
 public class EmployeeServiceImpl implements EmployeeService {
 
 	@Autowired
-	EmployeeRepo employeeRepository;
+	private EmployeeRepo employeeRepository;
 
 	@Autowired
-	BCryptPasswordEncoder passwordEncoder;
+	private BCryptPasswordEncoder passwordEncoder;
 
 	@Autowired
-	UserDetailServicesImpl userDetailsService;
+	private UserDetailServicesImpl userDetailsService;
 
 	@Autowired
 	private JwtUtils jwtUtils;

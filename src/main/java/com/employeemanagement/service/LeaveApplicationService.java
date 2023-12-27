@@ -13,7 +13,7 @@ public interface LeaveApplicationService {
 
 	public Response setLeaveStatus(int app_id, LeaveStatus status) throws  CustomeException;
 
-	public LeaveApplication creatingLeaveApplication(LeaveApplicationRequest leaveApplication) throws UserException;
+	public LeaveApplication creatingLeaveApplication(LeaveApplicationRequest applicationReq,Integer altId, Integer usrId) throws UserException, CustomeException;
 
 	public List<LeaveApplication> showAllApplication();
 
